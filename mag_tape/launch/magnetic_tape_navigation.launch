@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+
+<launch>
+  <node pkg="mag_tape" type="mag_tape_node" name="mag_tape_node" output="screen">
+  </node>
+</launch>
