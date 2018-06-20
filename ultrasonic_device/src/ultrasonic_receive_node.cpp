@@ -10,8 +10,11 @@ class UltrasonicSerial{
     public:
 
     // Constructor
-
+    UltrasonicSerial(std::string port, int baud, int serial_timeout);
     UltrasonicSerial();
+
+    // Chatter
+    void chatter();
 
     private:
     ros::Publisher serial_pub_;
@@ -22,29 +25,67 @@ class UltrasonicSerial{
     // Ros
     ros::NodeHandle nh_;
 
-    // Chatter
-    void chatter();
-
 };
+
+/*
+UltrasonicSerial::UltrasonicSerial() {
+
+    serial_pub_ = nh_.advertise<std_msgs::String>("chatter",1);
+}
+*/
+
+
+
+UltrasonicSerial::UltrasonicSerial(std::string port, int baud, int serial_timeout):
+        serial_(port, baud, serial::Timeout::simpleTimeout(serial_timeout)){
+
+
+    serial_pub_ = nh_.advertise<std_msgs::String>("chatter",1);
+
+    // advertise services
+    std::cout << "Is the serial port open?";
+    if(serial_.isOpen())
+        std::cout << " Yes." << std::endl;
+    else
+        std::cout << " No." << std::endl;
+
+}
+
+
+void UltrasonicSerial::chatter() {
+
+    std_msgs::String string;
+    std::stringstream ss;
+    ss << "hello world ";
+    string.data = ss.str();
+    serial_pub_.publish(string);
+}
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "talker");
-    ros::NodeHandle n;
-    ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
-    ros::Rate loop_rate(10);
-    int count = 0;
+
+
+    std::string port(argv[1]);
+    unsigned long baud = 0;
+    sscanf(argv[2], "%lu", &baud);
+    UltrasonicSerial msg(port, baud, 1000);
+
+    if(argc < 2) {
+        ROS_WARN("Usage: uv_rig_serial <serial port address> <baudrate>");
+        return 1;
+    }
+
+
+
+    //UltrasonicSerial msg;
+    ros::Rate rate(20);
     while (ros::ok())
     {
-        std_msgs::String msg;
-        std::stringstream ss;
-        ss << "hello world " << count;
-        msg.data = ss.str();
-        ROS_INFO("%s", msg.data.c_str());
-        chatter_pub.publish(msg);
-        ros::spinOnce();
-        loop_rate.sleep();
-        ++count;
+    ros::spinOnce();
+    msg.chatter();
+    rate.sleep();
     }
+
     return 0;
 }
