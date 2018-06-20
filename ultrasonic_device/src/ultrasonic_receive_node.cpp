@@ -11,9 +11,9 @@ class UltrasonicSerial{
 
     // Constructor
     UltrasonicSerial(std::string port, int baud, int serial_timeout);
-    UltrasonicSerial();
 
     // Chatter
+    //std::string chatter();
     void chatter();
 
     private:
@@ -24,15 +24,7 @@ class UltrasonicSerial{
 
     // Ros
     ros::NodeHandle nh_;
-
 };
-
-/*
-UltrasonicSerial::UltrasonicSerial() {
-
-    serial_pub_ = nh_.advertise<std_msgs::String>("chatter",1);
-}
-*/
 
 
 
@@ -53,18 +45,26 @@ UltrasonicSerial::UltrasonicSerial(std::string port, int baud, int serial_timeou
 
 
 void UltrasonicSerial::chatter() {
+/*
 
     std_msgs::String string;
     std::stringstream ss;
     ss << "hello world ";
     string.data = ss.str();
     serial_pub_.publish(string);
+
+*/
+
+    std::string reply = serial_.readline(1000, ",\r\n");
+    reply = reply.substr(0, reply.size()-2);
+
+    std::cout << "reply: " << reply;
+
 }
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "talker");
-
 
     std::string port(argv[1]);
     unsigned long baud = 0;
@@ -76,13 +76,11 @@ int main(int argc, char **argv)
         return 1;
     }
 
-
-
     //UltrasonicSerial msg;
     ros::Rate rate(20);
     while (ros::ok())
     {
-    ros::spinOnce();
+    ros::spin();
     msg.chatter();
     rate.sleep();
     }
