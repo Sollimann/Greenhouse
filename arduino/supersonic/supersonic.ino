@@ -33,11 +33,24 @@ void loop() {
   for (int i=0; i<NUM_PINGS; i++){
     delay(1000);
     dists[i] = sonar[i].ping_cm();
+
+    Serial.print("NR");
+    Serial.print(3);
+    Serial.print("ID");  
+    Serial.print(i);
+    Serial.print("CM");
+    Serial.print(dists[i]);
+    Serial.print("\n");
+
+    /*
     Serial.print("Ping  ");
     Serial.print(i);  
     Serial.print(": ");
     Serial.print(dists[i]);
     Serial.print(" cm\n");
+
+    */
   }
+ 
 }
 

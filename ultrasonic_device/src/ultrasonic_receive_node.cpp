@@ -11,6 +11,7 @@ class UltrasonicSerial{
 
     // Constructor
     UltrasonicSerial(std::string port, int baud, int serial_timeout);
+    ~UltrasonicSerial(){};
 
     // Chatter
     //std::string chatter();
@@ -36,12 +37,15 @@ UltrasonicSerial::UltrasonicSerial(std::string port, int baud, int serial_timeou
 
     // advertise services
     std::cout << "Is the serial port open?";
-    if(serial_.isOpen())
+    if(serial_.isOpen()){
         std::cout << " Yes." << std::endl;
-    else
+        serial_.flush();}
+    else{
         std::cout << " No." << std::endl;
+    }
 
 }
+
 
 
 void UltrasonicSerial::chatter() {
@@ -53,13 +57,22 @@ void UltrasonicSerial::chatter() {
     string.data = ss.str();
     serial_pub_.publish(string);
 
+
+
+    std::string reply = serial_.readline(50, ",\r\n");
+    reply = reply.substr(8, reply.size()-2);
+    std::cout << "reply: " << reply;
 */
 
-    std::string reply = serial_.readline(1000, ",\r\n");
+    std::string reply = serial_.readline(20, ",\r\n");
     reply = reply.substr(0, reply.size()-2);
+    std::string totNrDevices = reply.substr(reply.find('NR')+1,reply.find('I')-1);
+    std::string deviceID = reply.substr(reply.find('ID')+1,reply.find('CM')-1);
+    std::string lengthInCM = reply.substr(reply.find('CM')+1,reply.size());
 
-    std::cout << "reply: " << reply;
-
+    std::cout << "total nr devices: " << totNrDevices;
+    std::cout << "device ID: " << deviceID;
+    std::cout << "Length: " << lengthInCM;
 }
 
 int main(int argc, char **argv)
@@ -78,9 +91,10 @@ int main(int argc, char **argv)
 
     //UltrasonicSerial msg;
     ros::Rate rate(20);
+    //ros::Duration(3).sleep();
     while (ros::ok())
     {
-    ros::spin();
+    ros::spinOnce();
     msg.chatter();
     rate.sleep();
     }
