@@ -31,7 +31,7 @@ void loop() {
 */
     unsigned int dists[NUM_PINGS];
   for (int i=0; i<NUM_PINGS; i++){
-    delay(1000);
+    delay(25);
     dists[i] = sonar[i].ping_cm();
 
     Serial.print("N");

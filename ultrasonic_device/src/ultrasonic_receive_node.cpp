@@ -2,8 +2,10 @@
 #include <serial/serial.h> // http://wjwwood.io/serial/doc/1.1.0/classserial_1_1_serial.html
 #include <thorvald_msgs/ThorvaldIO.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Int16.h>
 #include <std_msgs/String.h>
 #include <sstream>
+#include <cstdint>
 
 class UltrasonicSerial{
 
@@ -14,8 +16,10 @@ class UltrasonicSerial{
     ~UltrasonicSerial(){};
 
     // Chatter
-    //std::string chatter();
     void chatter();
+
+    //Variables
+    int totNrDevices, deviceID, lengthInCM, count,loop;
 
     private:
     ros::Publisher serial_pub_;
@@ -33,7 +37,8 @@ UltrasonicSerial::UltrasonicSerial(std::string port, int baud, int serial_timeou
         serial_(port, baud, serial::Timeout::simpleTimeout(serial_timeout)){
 
 
-    serial_pub_ = nh_.advertise<std_msgs::String>("chatter",1);
+    serial_pub_ = nh_.advertise<thorvald_msgs::ThorvaldIO>("serial_io", 1);
+    //serial_pub_ = nh_.advertise<std_msgs::Int16>("serial_io", 1);
 
     // advertise services
     std::cout << "Is the serial port open?";
@@ -44,36 +49,63 @@ UltrasonicSerial::UltrasonicSerial(std::string port, int baud, int serial_timeou
         std::cout << " No." << std::endl;
     }
 
+    count =0;
+    loop = 0;
+
 }
 
 
 
 void UltrasonicSerial::chatter() {
-/*
-
-    std_msgs::String string;
-    std::stringstream ss;
-    ss << "hello world ";
-    string.data = ss.str();
-    serial_pub_.publish(string);
-
-
-
-    std::string reply = serial_.readline(50, ",\r\n");
-    reply = reply.substr(8, reply.size()-2);
-    std::cout << "reply: " << reply;
-*/
 
     std::string reply = serial_.readline(100, ",\r\n");
     reply = reply.substr(0, reply.size());
 
-    std::string totNrDevices = reply.substr(reply.find("N")+1,reply.find("I")-1);
-    std::string deviceID = reply.substr(reply.find("I")+1,reply.find("C")-3);
-    std::string lengthInCM = reply.substr(reply.find("C")+1,reply.size());
+    std::string NR = reply.substr(reply.find("N")+1,reply.find("I")-1);
+    std::string ID = reply.substr(reply.find("I")+1,reply.find("C")-3);
+    std::string CM = reply.substr(reply.find("C")+1,reply.size());
 
-    std::cout << "TOT: " << totNrDevices;
+
+    //std::cout << reply;
+
+    std::istringstream (NR) >> totNrDevices;
+    std::istringstream (ID) >> deviceID;
+    std::istringstream (CM) >> lengthInCM;
+
+
+    //std::cout << "TOT: " << NR;
+    //std::cout << " ID: " << ID;
+    //std::cout << " CM: " << CM;
+
+    loop++;
+    std::cout << "loop: " << loop << std::endl;
+    std::cout << " Tot: " << totNrDevices;
     std::cout << " ID: " << deviceID;
     std::cout << " CM: " << lengthInCM;
+
+    if (loop>400) {
+
+        //Publish
+        thorvald_msgs::ThorvaldIO status_msg;
+        status_msg.digitals.resize(2);
+        //status_msg.ranges[deviceID] = lengthInCM;
+
+        //std_msgs::Int32 status_msg;
+        status_msg.digitals[0] = deviceID;
+        status_msg.digitals[1] = lengthInCM;
+
+        std::cout << deviceID << "   -   " << lengthInCM;
+        count++;
+
+
+
+        if (count == totNrDevices) {
+
+            serial_pub_.publish(status_msg);
+            count = 0;
+        }
+    }
+
 }
 
 
@@ -84,7 +116,7 @@ int main(int argc, char **argv)
     std::string port(argv[1]);
     unsigned long baud = 0;
     sscanf(argv[2], "%lu", &baud);
-    UltrasonicSerial msg(port, baud, 1000);
+    UltrasonicSerial msg(port, baud, 10);
 
     if(argc < 2) {
         ROS_WARN("Usage: uv_rig_serial <serial port address> <baudrate>");
@@ -92,7 +124,7 @@ int main(int argc, char **argv)
     }
 
     //UltrasonicSerial msg;
-    ros::Rate rate(20);
+    ros::Rate rate(30);
     //ros::Duration(3).sleep();
     while (ros::ok())
     {
