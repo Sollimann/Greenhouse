@@ -64,16 +64,18 @@ void UltrasonicSerial::chatter() {
     std::cout << "reply: " << reply;
 */
 
-    std::string reply = serial_.readline(20, ",\r\n");
-    reply = reply.substr(0, reply.size()-2);
-    std::string totNrDevices = reply.substr(reply.find('NR')+1,reply.find('I')-1);
-    std::string deviceID = reply.substr(reply.find('ID')+1,reply.find('CM')-1);
-    std::string lengthInCM = reply.substr(reply.find('CM')+1,reply.size());
+    std::string reply = serial_.readline(100, ",\r\n");
+    reply = reply.substr(0, reply.size());
 
-    std::cout << "total nr devices: " << totNrDevices;
-    std::cout << "device ID: " << deviceID;
-    std::cout << "Length: " << lengthInCM;
+    std::string totNrDevices = reply.substr(reply.find("N")+1,reply.find("I")-1);
+    std::string deviceID = reply.substr(reply.find("I")+1,reply.find("C")-3);
+    std::string lengthInCM = reply.substr(reply.find("C")+1,reply.size());
+
+    std::cout << "TOT: " << totNrDevices;
+    std::cout << " ID: " << deviceID;
+    std::cout << " CM: " << lengthInCM;
 }
+
 
 int main(int argc, char **argv)
 {
