@@ -121,10 +121,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/thorvald_io_serial.cpp
-# )
+add_compile_options(-std=c++11)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
