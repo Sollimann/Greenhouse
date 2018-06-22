@@ -26,7 +26,7 @@ private:
     //constants & variables
     double Kp_x,Kp_z,Ki_x,integral_fwd;
     unsigned int totNrDevices, currentNrDevices, deviceID, range;
-    bool railDetected, initialize_range_array;
+    bool railDetected, tapeDetected, initialize_range_array;
     unsigned int ranges[100];
 
     //Initialize
@@ -49,5 +49,6 @@ private:
     //Adjust velocity
     void calc_velocity();
 
-
+    //Control vechicle
+    void controller();
 };

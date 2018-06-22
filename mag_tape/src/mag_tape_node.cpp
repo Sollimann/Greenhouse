@@ -14,6 +14,7 @@ MagTapeNode::MagTapeNode(ros::NodeHandle &nh_)
   integral_fwd = 0;
 
   railDetected = false;
+  tapeDetected = false;
   initialize_range_array = true;
   totNrDevices = 1;
   currentNrDevices = 0;
@@ -39,7 +40,7 @@ void MagTapeNode::calc_velocity() {
     integral_fwd += dt*error;
 
     //vx = fabs(error*Kp_x) + Ki_x*integral_fwd;
-    vx = 0.07;
+    vx = 0.17;
     wz = -error*Kp_z;
 
     //Publish
@@ -48,6 +49,28 @@ void MagTapeNode::calc_velocity() {
     mag_pub_.publish(base_cmd);
 
 }
+
+void MagTapeNode::controller(){
+
+    if(tapeDetected || railDetected){
+        if (tapeDetected) {
+            calc_velocity();
+            //Neither tape or rail detected
+            std::cout << "tape detected " << std::endl;
+        }
+        if (railDetected) {
+            //rail_automatic_control();
+            std::cout << "rail detected at device " << std::endl;
+        }
+    }else{
+        //Stay idle
+        base_cmd.linear.x = 0;
+        base_cmd.angular.z = 0;
+        mag_pub_.publish(base_cmd);
+    }
+
+}
+
 
 /****************************************************************************/
 /******************************* TAPE DETECTION *****************************/
@@ -70,32 +93,19 @@ bool MagTapeNode::tapeDetection() {
 
 
 /****************************************************************************/
-/***************************** CALLBACK FUNCTION ****************************/
+/***************************** TAPE DETECTION ****************************/
 /****************************************************************************/
 
 void MagTapeNode::canCallback(const thorvald_base::CANFrameConstPtr& can_msg)
 {
-    if (can_msg->id == 404)
-    {
+    if (can_msg->id == 404) {
         left_marker = can_msg->data[0];
         right_marker = can_msg->data[1];
         //std::cout << "left: " << (int)left_marker << ", right: " << (int)right_marker << std::endl;
 
+      tapeDetected = tapeDetection();
+    }
 
-
-        if (tapeDetection()) {
-            calc_velocity();
-            //Neither tape or rail detected
-        }else if(railDetected){
-            //rail_automatic_control();
-            //std::cout << "rail detected " << std::endl;
-        }
-        }else{
-            //Stay idle
-            base_cmd.linear.x = 0;
-            base_cmd.angular.z = 0;
-            mag_pub_.publish(base_cmd);
-        }
 }
 
 /****************************************************************************/
@@ -104,19 +114,6 @@ void MagTapeNode::canCallback(const thorvald_base::CANFrameConstPtr& can_msg)
 
 void MagTapeNode::railDetection(const thorvald_msgs::ThorvaldIOConstPtr& serial_msg){
 
-    railDetected = true;
-    if(initialize_range_array || (currentNrDevices != totNrDevices)){
-
-        if(serial_msg->analogs[1] > 0) {
-            //Set array size equal to nr of devices connected
-            //ranges[serial_msg->analogs[1]];
-        }
-
-        //Never access if again
-        currentNrDevices = totNrDevices;
-        initialize_range_array = false;
-    }
-
     if(serial_msg->analogs.size() > 0 && serial_msg->ranges.size() > 0) {
         totNrDevices = serial_msg->analogs[1];
         deviceID = serial_msg->analogs[0];
@@ -124,20 +121,24 @@ void MagTapeNode::railDetection(const thorvald_msgs::ThorvaldIOConstPtr& serial_
 
         ranges[deviceID] = range;
 
-        //std::cout << "range: " << range << std::endl;
-
-        std::cout << "range 0: " << ranges[0] << std::endl;
-        std::cout << "range 1: " << ranges[1] << std::endl;
-        std::cout << "range 2: " << ranges[2] << std::endl;
+        //std::cout << "range 0: " << ranges[0] << std::endl;
+        //std::cout << "range 1: " << ranges[1] << std::endl;
+        //std::cout << "range 2: " << ranges[2] << std::endl;
 
 
-        /*
         for(int i = 0; i < totNrDevices; i++){
-            //std::cout << "range: " << i << "has length= " << ranges[i] << std::endl;
+            //std::cout << "ranges " << i << "is equal to: " << ranges[i] << std::endl;
+            if(ranges[i] < 15 && ranges[i] > 4){
+                railDetected = true;
+            }else{
+                railDetected = false;
+                //std::cout << "No rail" << std::endl;
+            }
+
         }
-         */
     }
 
+    controller();
 }
 
 
