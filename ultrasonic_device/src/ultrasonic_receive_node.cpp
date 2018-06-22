@@ -90,7 +90,7 @@ void UltrasonicSerial::chatter() {
     status_msg.analogs.resize(2);
 
     status_msg.analogs[0] = deviceID;	
-    status_msg.analogs[1] = totNrDevices;
+    status_msg.analogs[1] = totNrDaddevices;
     status_msg.ranges[0] = lengthInCM;
 
     serial_pub_.publish(status_msg);
