@@ -4,7 +4,7 @@
 /********************************* CONSTRUCTOR ******************************/
 /****************************************************************************/
 
-MagTapeNode::MagTapeNode(ros::NodeHandle &nh_)
+MagTape::MagTape(ros::NodeHandle &nh_)
 {
 
   //Initialize
@@ -13,17 +13,22 @@ MagTapeNode::MagTapeNode(ros::NodeHandle &nh_)
   Kp_z = 0.002;
   integral_fwd = 0;
 
+  //Boolians
   railDetected = false;
   tapeDetected = false;
+  railMonitoringMission = false;
   initialize_range_array = true;
+
+  //Devices
   totNrDevices = 1;
   currentNrDevices = 0;
 
-
+  //RailWay Object
+  //RailWay rails;
 
   //Topics
-  ultrasonic_sub_ = nh_.subscribe("serial_io", 1, &MagTapeNode::railDetection, this);
-  can_sub_ = nh_.subscribe("can_frames_device_r", 1, &MagTapeNode::canCallback, this);
+  ultrasonic_sub_ = nh_.subscribe("serial_io", 1, &MagTape::railDetection, this);
+  can_sub_ = nh_.subscribe("can_frames_device_r", 1, &MagTape::canCallback, this);
   mag_pub_ = nh_.advertise<geometry_msgs::Twist>("nav_vel",1);
 
 }
@@ -32,7 +37,7 @@ MagTapeNode::MagTapeNode(ros::NodeHandle &nh_)
 /**************************** CALCULATE VELOCITY ****************************/
 /****************************************************************************/
 
-void MagTapeNode::calc_velocity() {
+void MagTape::calc_velocity_along_tape() {
 
     //Velocities
     double vx,wz;
@@ -50,17 +55,39 @@ void MagTapeNode::calc_velocity() {
 
 }
 
-void MagTapeNode::controller(){
+/****************************************************************************/
+/***************************** PLANT MONITORING *****************************/
+/****************************************************************************/
 
-    if(tapeDetected || railDetected){
+
+bool RailWay::automaticPlantMonitoring(){
+
+return true;
+}
+
+
+/****************************************************************************/
+/******************************** CONTROLLER  *******************************/
+/****************************************************************************/
+
+void MagTape::controller(){
+
+    if(tapeDetected && railDetected || railMonitoringMission){
+
+        railMonitoringMission = rails.automaticPlantMonitoring();
+
+
+        std::cout << "both rail and tape detected" << std::endl;
+
+    }else if(tapeDetected || railDetected){
         if (tapeDetected) {
-            calc_velocity();
+            calc_velocity_along_tape();
             //Neither tape or rail detected
             std::cout << "tape detected " << std::endl;
         }
         if (railDetected) {
-            //rail_automatic_control();
-            std::cout << "rail detected at device " << std::endl;
+            //calc_velocty_along_rail();
+            std::cout << "rail detected " << std::endl;
         }
     }else{
         //Stay idle
@@ -71,12 +98,11 @@ void MagTapeNode::controller(){
 
 }
 
-
 /****************************************************************************/
 /******************************* TAPE DETECTION *****************************/
 /****************************************************************************/
 
-bool MagTapeNode::tapeDetection() {
+bool MagTape::tapeDetection() {
 
     int count = 0;
     while(left_marker == 0 && right_marker == 0) {
@@ -93,10 +119,10 @@ bool MagTapeNode::tapeDetection() {
 
 
 /****************************************************************************/
-/***************************** TAPE DETECTION ****************************/
+/***************************** CAN MSG CALLBACK  ****************************/
 /****************************************************************************/
 
-void MagTapeNode::canCallback(const thorvald_base::CANFrameConstPtr& can_msg)
+void MagTape::canCallback(const thorvald_base::CANFrameConstPtr& can_msg)
 {
     if (can_msg->id == 404) {
         left_marker = can_msg->data[0];
@@ -112,7 +138,7 @@ void MagTapeNode::canCallback(const thorvald_base::CANFrameConstPtr& can_msg)
 /****************************** RAIL DETECTION ******************************/
 /****************************************************************************/
 
-void MagTapeNode::railDetection(const thorvald_msgs::ThorvaldIOConstPtr& serial_msg){
+void MagTape::railDetection(const thorvald_msgs::ThorvaldIOConstPtr& serial_msg){
 
     if(serial_msg->analogs.size() > 0 && serial_msg->ranges.size() > 0) {
         totNrDevices = serial_msg->analogs[1];
@@ -150,7 +176,7 @@ int main (int argc, char** argv)
 {
   ros::init(argc, argv, "mag_tape_node");
   ros::NodeHandle nh_;
-  MagTapeNode mag_tape(nh_);
+  MagTape mag_tape(nh_);
 
     while(ros::ok()) {
         ros::spinOnce();
