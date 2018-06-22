@@ -9,6 +9,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   thorvald_base
+  ultrasonic_device
+  ##thorvald_msgs
 )
 
 
@@ -16,33 +18,21 @@ find_package(catkin REQUIRED COMPONENTS
 ## Build ##
 ###########
 
+catkin_package(
+#  INCLUDE_DIRS include
+#  LIBRARIES thorvald_io_serial
+#  CATKIN_DEPENDS roscpp rospy serial thorvald_msgs
+#  DEPENDS system_lib
+)
+
+
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+include_directories(${catkin_INCLUDE_DIRS})
 
-## Declare a C++ library
-# add_library(mag_sens
-#   src/${PROJECT_NAME}/mag_sens.cpp
-# )
-
-## Add cmake target dependencies of the library
-## as an example, code may need to be generated before libraries
-## either from message generation or dynamic reconfigure
-# add_dependencies(mag_sens ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Declare a C++ executable
 add_executable(mag_tape_node src/mag_tape_node.cpp)
-
-## Add cmake target dependencies of the executable
-## same as for the library above
 add_dependencies(mag_tape_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(mag_tape_node
-  ${catkin_LIBRARIES}
-)
+target_link_libraries(mag_tape_node ${catkin_LIBRARIES})
 
 
