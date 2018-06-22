@@ -1,41 +1,4 @@
-#include <ros/ros.h>
-#include <serial/serial.h> // http://wjwwood.io/serial/doc/1.1.0/classserial_1_1_serial.html
-#include <thorvald_msgs/ThorvaldIO.h>
-#include <std_msgs/Float32.h>
-#include <std_msgs/Int16.h>
-#include <std_msgs/String.h>
-#include <sstream>
-#include <cstdint>
-
-/****************************************************************************/
-/**************************** Class declaration *****************************/
-/****************************************************************************/
-
-class UltrasonicSerial{
-
-    public:
-
-    // Constructor
-    UltrasonicSerial(std::string port, int baud, int serial_timeout);
-    ~UltrasonicSerial(){};
-
-    // Chatter
-    void chatter();
-
-    //Variables
-    int totNrDevices, deviceID, lengthInCM, count,loop;
-
-    private:
-    ros::Publisher serial_pub_;
-
-    // Serial object
-    serial::Serial serial_;
-
-    // Ros
-    ros::NodeHandle nh_;
-};
-
-
+#include "ultrasonic_receive_node.h"
 
 /****************************************************************************/
 /********************************* CONSTRUCTOR ******************************/
@@ -90,7 +53,7 @@ void UltrasonicSerial::chatter() {
     status_msg.analogs.resize(2);
 
     status_msg.analogs[0] = deviceID;	
-    status_msg.analogs[1] = totNrDaddevices;
+    status_msg.analogs[1] = totNrDevices;
     status_msg.ranges[0] = lengthInCM;
 
     serial_pub_.publish(status_msg);
