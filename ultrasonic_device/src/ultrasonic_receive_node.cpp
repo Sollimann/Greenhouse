@@ -87,9 +87,10 @@ void UltrasonicSerial::chatter() {
     //Publish
     thorvald_msgs::ThorvaldIO status_msg;
     status_msg.ranges.resize(1);
-    status_msg.analogs.resize(1);
+    status_msg.analogs.resize(2);
 
-    status_msg.analogs[0] = deviceID;
+    status_msg.analogs[0] = deviceID;	
+    status_msg.analogs[1] = totNrDevices;
     status_msg.ranges[0] = lengthInCM;
 
     serial_pub_.publish(status_msg);
