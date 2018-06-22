@@ -35,7 +35,7 @@ void loop() {
     dists[i] = sonar[i].ping_cm();
 
     Serial.print("N");
-    Serial.print(3);
+    Serial.print(NUM_PINGS);
     Serial.print("I");  
     Serial.print(i);
     Serial.print("C");
