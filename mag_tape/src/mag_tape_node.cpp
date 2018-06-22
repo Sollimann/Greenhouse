@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <thorvald_base/CANFrame.h>
+#include <thorvald_msgs/ThorvaldIO.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <std_msgs/Float64.h>
@@ -14,10 +15,11 @@ int SENSOR_MAX_ERROR = 100;
 class MagTapeNode
 {
   public:
-  MagTapeNode();
+  MagTapeNode(ros::NodeHandle &nh_);
 
   private:
-  ros::NodeHandle nh_;
+
+  ros::Subscriber ultrasonic_sub_;
   ros::Subscriber can_sub_;
   ros::Publisher mag_pub_;
 
@@ -39,7 +41,7 @@ class MagTapeNode
   bool tapeDetection();
 
   //Check if connected to rail
-  bool railDetection();
+  void railDetection(const thorvald_msgs::ThorvaldIOConstPtr& serial_msg);
 
   //Adjust velocity
   void calc_velocity();
@@ -51,7 +53,7 @@ class MagTapeNode
 /********************************* CONSTRUCTOR ******************************/
 /****************************************************************************/
 
-MagTapeNode::MagTapeNode()
+MagTapeNode::MagTapeNode(ros::NodeHandle &nh_)
 {
 
   //Initialize
@@ -63,6 +65,7 @@ MagTapeNode::MagTapeNode()
 
 
   //Topics
+  ultrasonic_sub_ = nh_.subscribe("serial_io", 1, &MagTapeNode::railDetection, this);
   can_sub_ = nh_.subscribe("can_frames_device_r", 1, &MagTapeNode::canCallback, this);
   mag_pub_ = nh_.advertise<geometry_msgs::Twist>("nav_vel",1);
 
@@ -100,7 +103,7 @@ bool MagTapeNode::tapeDetection() {
     while(left_marker == 0 && right_marker == 0) {
         count++;
         if(count > 30) {
-            std::cout << "No tape detected" << std::endl;
+            //std::cout << "No tape detected" << std::endl;
             return false;
         }
 
@@ -109,13 +112,8 @@ bool MagTapeNode::tapeDetection() {
     return true;
 }
 
-/****************************************************************************/
-/****************************** RAIL DETECTION ******************************/
-/****************************************************************************/
 
-bool MagTapeNode::railDetection(){
-return false;
-}
+
 
 /****************************************************************************/
 /***************************** CALLBACK FUNCTION ****************************/
@@ -127,14 +125,10 @@ void MagTapeNode::canCallback(const thorvald_base::CANFrameConstPtr& can_msg)
     {
         left_marker = can_msg->data[0];
         right_marker = can_msg->data[1];
-        std::cout << "left: " << (int)left_marker << ", right: " << (int)right_marker << std::endl;
+        //std::cout << "left: " << (int)left_marker << ", right: " << (int)right_marker << std::endl;
 
 
-        if(railDetection()){
-
-        }
-        //If the magnetic tape is within reach
-        else if (tapeDetection()) {
+        if (tapeDetection()) {
             calc_velocity();
         //Neither tape or rail detected
         }else{
@@ -147,6 +141,21 @@ void MagTapeNode::canCallback(const thorvald_base::CANFrameConstPtr& can_msg)
     }
 }
 
+/****************************************************************************/
+/****************************** RAIL DETECTION ******************************/
+/****************************************************************************/
+
+void MagTapeNode::railDetection(const thorvald_msgs::ThorvaldIOConstPtr& serial_msg){
+
+
+
+    if(serial_msg->analogs.size() > 0 && serial_msg->ranges.size() > 0) {
+        std::cout << " analogs : " << serial_msg->analogs[0] << std::endl;
+        std::cout << " ranges: " << serial_msg->ranges[0] << std::endl;
+    }
+
+}
+
 
 /****************************************************************************/
 /******************************** ROS SPECIFIC ******************************/
@@ -155,8 +164,13 @@ void MagTapeNode::canCallback(const thorvald_base::CANFrameConstPtr& can_msg)
 int main (int argc, char** argv)
 {
   ros::init(argc, argv, "mag_tape_node");
-  MagTapeNode mag_Tape;
-  ros::spin();
+  ros::NodeHandle nh_;
+  MagTapeNode mag_tape(nh_);
+
+    while(ros::ok()) {
+        ros::spinOnce();
+    }
+
   return 0;
 
 }
