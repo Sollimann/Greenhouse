@@ -16,6 +16,8 @@ MagTape::MagTape(ros::NodeHandle &nh_)
   //Boolians
   railDetected = false;
   tapeDetected = false;
+  enterRail = true;
+  leaveRail = false;
   railMonitoringMission = false;
   initialize_range_array = true;
 
@@ -41,7 +43,7 @@ void MagTape::calc_velocity_along_tape() {
 
     //Velocities
     double vx,wz;
-    double error = (left_marker + right_marker)/2.0; //Average value
+    error = (left_marker + right_marker)/2.0; //Average value
     integral_fwd += dt*error;
 
     //vx = fabs(error*Kp_x) + Ki_x*integral_fwd;
@@ -62,7 +64,44 @@ void MagTape::calc_velocity_along_tape() {
 
 bool RailWay::automaticPlantMonitoring(){
 
-return true;
+    bool monitoring = true;
+
+
+
+        // Railings have been detected and we want to enter
+        if (enterRail) {
+
+            std::cout << "Enter the rail " << std::endl;
+
+            if (tapeDetected && railDetected){
+                // When the tape is detected on the way back
+                // Leave the rail
+
+                std::cout << "End of rail detected " << std::endl;
+                enterRail = false;
+                leaveRail = true;
+            }
+            //monitoring = true;
+        }
+
+        // End of railings have been detected and we want to exit
+        if (leaveRail) {
+
+            std::cout << "Leave the rail... " << std::endl;
+
+
+            if(this->tapeDetected && !this->railDetected){
+            // If the robot has left the rails and only detect the magnetic tape
+                enterRail = true;
+                leaveRail = false;
+
+                std::cout << "Rails have been left " << std::endl;
+
+                monitoring = false;
+        }
+    }
+
+return monitoring;
 }
 
 
@@ -74,23 +113,24 @@ void MagTape::controller(){
 
     if(tapeDetected && railDetected || railMonitoringMission){
 
-        railMonitoringMission = rails.automaticPlantMonitoring();
+        //railMonitoringMission = automaticPlantMonitoring();
 
 
-        std::cout << "both rail and tape detected" << std::endl;
+        //std::cout << "both rail and tape detected" << std::endl;
 
     }else if(tapeDetected || railDetected){
         if (tapeDetected) {
             calc_velocity_along_tape();
             //Neither tape or rail detected
-            std::cout << "tape detected " << std::endl;
+            //std::cout << "tape detected " << std::endl;
         }
         if (railDetected) {
             //calc_velocty_along_rail();
-            std::cout << "rail detected " << std::endl;
+            //std::cout << "rail detected " << std::endl;
         }
     }else{
         //Stay idle
+        std::cout << "No speed" << std::endl;
         base_cmd.linear.x = 0;
         base_cmd.angular.z = 0;
         mag_pub_.publish(base_cmd);
@@ -129,7 +169,7 @@ void MagTape::canCallback(const thorvald_base::CANFrameConstPtr& can_msg)
         right_marker = can_msg->data[1];
         //std::cout << "left: " << (int)left_marker << ", right: " << (int)right_marker << std::endl;
 
-      tapeDetected = tapeDetection();
+        tapeDetected = tapeDetection();
     }
 
 }
@@ -142,14 +182,21 @@ void MagTape::railDetection(const thorvald_msgs::ThorvaldIOConstPtr& serial_msg)
 
     if(serial_msg->analogs.size() > 0 && serial_msg->ranges.size() > 0) {
         totNrDevices = serial_msg->analogs[1];
-        deviceID = serial_msg->analogs[0];
-        range = serial_msg->ranges[0];
+        //deviceID = serial_msg->analogs[0];
 
-        ranges[deviceID] = range;
 
-        //std::cout << "range 0: " << ranges[0] << std::endl;
-        //std::cout << "range 1: " << ranges[1] << std::endl;
-        //std::cout << "range 2: " << ranges[2] << std::endl;
+        for(int i = 0; i < (totNrDevices); i++) {
+            range = serial_msg->ranges[i];
+            ranges[i] = range;
+        }
+
+        std::cout << "range 0: " << ranges[0] << std::endl;
+        std::cout << "range 1: " << ranges[1] << std::endl;
+        std::cout << "range 2: " << ranges[2] << std::endl;
+
+        //std::cout << "range 0: " << serial_msg->ranges[0] << std::endl;
+        //std::cout << "range 1: " << serial_msg->ranges[1] << std::endl;
+        //std::cout << "range 2: " << serial_msg->ranges[2] << std::endl;
 
 
         for(int i = 0; i < totNrDevices; i++){

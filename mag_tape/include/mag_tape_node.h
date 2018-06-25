@@ -21,12 +21,15 @@ public:
     //railWay class can access MagTape class
     friend class MagTape;
     //Constructor
-
+    bool automaticPlantMonitoring();
+    //friend void RailWay::automaticPlantMonitoring();
+    bool enterRail, leaveRail;
 
 private:
 
+    bool railDetected, tapeDetected;
+    double railLength;
 
-    bool automaticPlantMonitoring();
     RailWay(){};
     //Desctructor
     //~RailWay();
@@ -42,10 +45,12 @@ public:
 
     //MagTape can access RailWay
     //friend class RailWay;
-    //friend void RailWay::automaticPlantMonitoring();
+
 
     // Object
-    RailWay rails;
+    //RailWay rails;
+    friend class RailWay;
+    //bool railDetected, tapeDetected;
 private:
 
     ros::Subscriber ultrasonic_sub_;
@@ -55,9 +60,10 @@ private:
 
 
     //constants & variables
-    double Kp_x,Kp_z,Ki_x,integral_fwd;
+    double Kp_x,Kp_z,Ki_x,integral_fwd, error;
     unsigned int totNrDevices, currentNrDevices, deviceID, range;
-    bool railDetected, tapeDetected, initialize_range_array, railMonitoringMission;
+    //friend RailWay bool railDetected, tapeDetected
+    bool initialize_range_array, railMonitoringMission;
     unsigned int ranges[100];
 
     //Initialize
