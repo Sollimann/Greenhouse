@@ -19,8 +19,6 @@ UltrasonicSerial::UltrasonicSerial(std::string port, int baud, int serial_timeou
         std::cout << " No." << std::endl;
     }
 
-    count =0;
-    loop = 0;
 
 }
 
@@ -48,17 +46,15 @@ void UltrasonicSerial::chatter() {
     std::cout << " CM: " << lengthInCM << std::endl;
 
     //Publish
-    thorvald_msgs::ThorvaldIO status_msg;
-    status_msg.ranges.resize(1);
+    status_msg.ranges.resize(totNrDevices);
     status_msg.analogs.resize(2);
 
     status_msg.analogs[0] = deviceID;	
     status_msg.analogs[1] = totNrDevices;
-    status_msg.ranges[0] = lengthInCM;
+    status_msg.ranges[deviceID] = lengthInCM;
+
 
     serial_pub_.publish(status_msg);
-
-
 }
 
 /****************************************************************************/

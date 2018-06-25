@@ -23,10 +23,11 @@ class UltrasonicSerial{
     void chatter();
 
     //Variables
-    int totNrDevices, deviceID, lengthInCM, count,loop;
+    int totNrDevices, deviceID, lengthInCM;
 
     private:
     ros::Publisher serial_pub_;
+    thorvald_msgs::ThorvaldIO status_msg;
 
     // Serial object
     serial::Serial serial_;
