@@ -1,1 +1,0 @@
-CMakeLists.txt not found in /home/kristoffer/th_ws/src/mag_sens
