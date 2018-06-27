@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 # Service files
 add_service_files(FILES
  PlantMonitoring.srv
+ AddTwoInts.srv
 )
 
 ## Generate added messages and services with any dependencies listed here
