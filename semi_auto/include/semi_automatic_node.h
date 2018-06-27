@@ -3,6 +3,7 @@
 
 // Messages
 #include <thorvald_msgs/ThorvaldIO.h>
+#include <geometry_msgs/Twist.h>
 
 // Services
 #include <thorvald_base/CANFrame.h>
@@ -15,7 +16,11 @@ class SemiAuto
 {
 public:
     SemiAuto(ros::NodeHandle &nh_);
+
+    // Functions
     bool railDetection();
+    bool wallDetection();
+    void automaticRailService();
 
 private:
 
@@ -36,6 +41,10 @@ private:
 
     ros::Subscriber ultrasonic_sub_;
 
+    /** Publisher **/
+
+    ros::Publisher vel_pub_;
+
 
     /** Callbacks **/
 
@@ -43,7 +52,7 @@ private:
     void rangeDetection(const thorvald_msgs::ThorvaldIOConstPtr& serial_msg);
 
     /** Variables **/
-    bool railDetected, tapeDetected;
+    bool railDetected, wallDetected, forwardMotion, plantServiceRequested;
     unsigned int totNrDevices, deviceID, range;
     unsigned int ranges[100];
 };
