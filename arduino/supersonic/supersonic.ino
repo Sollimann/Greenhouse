@@ -1,21 +1,24 @@
 #include <NewPing.h>
 
-#define TRIGGER_PIN1  4
-#define ECHO_PIN1     4
-#define TRIGGER_PIN2  10
-#define ECHO_PIN2     10
-#define TRIGGER_PIN3  13
-#define ECHO_PIN3     13
+#define TRIGGER_PIN1  10
+#define ECHO_PIN1     10
+#define TRIGGER_PIN2  11
+#define ECHO_PIN2     11
+#define TRIGGER_PIN3  12
+#define ECHO_PIN3     12
+#define TRIGGER_PIN4  13
+#define ECHO_PIN4     13
 #define MAX_DISTANCE 200
 
 // Define number of devices connected
-#define NUM_PINGS 3
+#define NUM_PINGS 4
 
 // Add pins of each respective device
 NewPing sonar[NUM_PINGS] = {
   NewPing(TRIGGER_PIN1, ECHO_PIN1, MAX_DISTANCE),
   NewPing(TRIGGER_PIN2, ECHO_PIN2, MAX_DISTANCE),
   NewPing(TRIGGER_PIN3, ECHO_PIN3, MAX_DISTANCE),
+  NewPing(TRIGGER_PIN4, ECHO_PIN4, MAX_DISTANCE),
 };
 
 
