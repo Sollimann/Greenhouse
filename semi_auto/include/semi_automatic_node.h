@@ -20,6 +20,7 @@ public:
     // Functions
     bool railDetection();
     bool wallDetection();
+    bool floorDetection();
     void automaticRailService();
 
 private:
@@ -52,7 +53,8 @@ private:
     void rangeDetection(const thorvald_msgs::ThorvaldIOConstPtr& serial_msg);
 
     /** Variables **/
-    bool railDetected, wallDetected, forwardMotion, plantServiceRequested;
+    bool railDetected, wallDetected, floorDetected;
+    bool forwardMotion, plantServiceRequested;
     unsigned int totNrDevices, deviceID, range;
     unsigned int ranges[100];
 };

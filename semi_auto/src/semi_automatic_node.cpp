@@ -1,13 +1,45 @@
 #include "semi_automatic_node.h"
 
+
+/****************************************************************************/
+/****************************** FLOOR DETECTION *****************************/
+/****************************************************************************/
+
+bool SemiAuto::floorDetection() {
+
+    int UPPER_LIMIT = 25;
+    int LOWER_LIMIT = 20;
+    int count = 0;
+    int floorDeviceIndexStart = 0;
+    int floorDeviceIndexEnd = 1;
+
+    while(count < 30){
+
+        for(int i = floorDeviceIndexStart; i <= floorDeviceIndexEnd; i++){
+            //std::cout << "count: " << count << std::endl;
+            if(ranges[i] <= UPPER_LIMIT && ranges[i] >= LOWER_LIMIT){
+                count++;
+            }else{
+                //std::cout << "no rail detection" << std::endl;
+                return false;
+
+            }
+        }
+
+    }
+    //std::cout << "rail detection" << std::endl;
+    return true;
+}
+
+
 /****************************************************************************/
 /******************************* RAIL DETECTION *****************************/
 /****************************************************************************/
 
 bool SemiAuto::railDetection() {
 
-    int UPPER_LIMIT = 15;
-    int LOWER_LIMIT = 2;
+    int UPPER_LIMIT = 19;
+    int LOWER_LIMIT = 1;
     int count = 0;
     int railDeviceIndexStart = 0;
     int railDeviceIndexEnd = 1;
@@ -36,8 +68,8 @@ bool SemiAuto::railDetection() {
 
 bool SemiAuto::wallDetection() {
 
-    int UPPER_LIMIT = 20;
-    int LOWER_LIMIT = 0;
+    int UPPER_LIMIT = 50;
+    int LOWER_LIMIT = 10;
     int count = 0;
     int wallDeviceIndexStart = 2;
     int wallDeviceIndexEnd = totNrDevices-1;
@@ -82,6 +114,9 @@ void SemiAuto::rangeDetection(const thorvald_msgs::ThorvaldIOConstPtr& serial_ms
     std::cout << "Rail detected: " << railDetected << std::endl;
     wallDetected = wallDetection();
     std::cout << "Wall detected: " << wallDetected << std::endl;
+    floorDetected = floorDetection();
+    std::cout << "Floor detected: " << floorDetected << std::endl;
+
 
 
     if(plantServiceRequested){
@@ -101,7 +136,7 @@ void SemiAuto::automaticRailService(){
    // railDetected = railDetection();
     //Velocities
     double vx;
-    vx = 0.17;
+    vx = 0.25;
     geometry_msgs::Twist base_cmd;
 
     // No rail detected
@@ -122,10 +157,10 @@ void SemiAuto::automaticRailService(){
     if(railDetected && wallDetected && forwardMotion) {
 
         //De-acceleration
-        for(int i = 1; i < 30;i++){
+        for(int i = 1; i < 100;i++){
 
             //Publish
-            base_cmd.linear.x = vx/1.5;
+            base_cmd.linear.x = vx/1.1;
             vel_pub_.publish(base_cmd);
         }
 
@@ -138,6 +173,16 @@ void SemiAuto::automaticRailService(){
         //Publish
         base_cmd.linear.x = -vx;
         vel_pub_.publish(base_cmd);
+    }
+
+    // When exiting the rails backwards
+    if(!forwardMotion && floorDetected){
+
+        // Make forward motion true for next run
+        forwardMotion = true;
+
+        // Service complete
+        plantServiceRequested = false;
     }
 
 
@@ -203,6 +248,7 @@ SemiAuto::SemiAuto(ros::NodeHandle &nh_)
     plantServiceRequested = false;
     forwardMotion = true;
     wallDetected = false;
+    floorDetected = true;
 
 }
 
