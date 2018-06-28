@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+
+<launch>
+  <node pkg="semi_auto" type="semi_automatic_node" name="semi_automatic_node" output="screen">
+  </node>
+</launch>

@@ -156,13 +156,17 @@ void SemiAuto::automaticRailService(){
     // wall detected
     if(railDetected && wallDetected && forwardMotion) {
 
-        //De-acceleration
-        for(int i = 1; i < 100;i++){
+        //Publish
+        base_cmd.linear.x = 0;
+        vel_pub_.publish(base_cmd);
 
-            //Publish
-            base_cmd.linear.x = vx/1.1;
-            vel_pub_.publish(base_cmd);
-        }
+        //De-acceleration
+        ros::Rate r(1); // 10 hz
+        r.sleep();
+
+        //Publish
+        base_cmd.linear.x = vx;
+        vel_pub_.publish(base_cmd);
 
         // bool
         forwardMotion = false;
