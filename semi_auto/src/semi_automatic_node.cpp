@@ -7,8 +7,8 @@
 
 bool SemiAuto::floorDetection() {
 
-    int UPPER_LIMIT = 25;
-    int LOWER_LIMIT = 20;
+    int UPPER_LIMIT = 20;
+    int LOWER_LIMIT = 11;
     int count = 0;
     int floorDeviceIndexStart = 0;
     int floorDeviceIndexEnd = 1;
@@ -38,7 +38,7 @@ bool SemiAuto::floorDetection() {
 
 bool SemiAuto::railDetection() {
 
-    int UPPER_LIMIT = 19;
+    int UPPER_LIMIT = 10;
     int LOWER_LIMIT = 1;
     int count = 0;
     int railDeviceIndexStart = 0;
@@ -90,7 +90,23 @@ bool SemiAuto::wallDetection() {
 }
 
 /****************************************************************************/
-/****************************** RANGE DETECTION *****************************/
+/******************************* TAPE DETECTION *****************************/
+/****************************************************************************/
+
+bool SemiAuto::tapeDetection() {
+
+    int count = 0;
+    while(left_marker == 0 && right_marker == 0) {
+        count++;
+        if(count > 30) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/****************************************************************************/
+/************************* RANGE DETECTION CALLBACK *************************/
 /****************************************************************************/
 
 void SemiAuto::rangeDetection(const thorvald_msgs::ThorvaldIOConstPtr& serial_msg){
@@ -108,6 +124,7 @@ void SemiAuto::rangeDetection(const thorvald_msgs::ThorvaldIOConstPtr& serial_ms
         std::cout << "range 1: " << ranges[1] << std::endl;
         std::cout << "range 2: " << ranges[2] << std::endl;
         std::cout << "range 3: " << ranges[3] << std::endl;
+        //std::cout << "left marker: " << left_marker << "  right marker: " << right_marker << std::endl;
     }
 
     railDetected = railDetection();
@@ -116,12 +133,28 @@ void SemiAuto::rangeDetection(const thorvald_msgs::ThorvaldIOConstPtr& serial_ms
     std::cout << "Wall detected: " << wallDetected << std::endl;
     floorDetected = floorDetection();
     std::cout << "Floor detected: " << floorDetected << std::endl;
+    tapeDetected = tapeDetection();
+    std::cout << "Tape detected: " << tapeDetected << std::endl;
 
 
 
     if(plantServiceRequested){
         // Start service
         automaticRailService();
+    }
+
+}
+
+/****************************************************************************/
+/**************************** CAN MSG CALLBACK  *****************************/
+/****************************************************************************/
+
+void SemiAuto::canCallback(const thorvald_base::CANFrameConstPtr& can_msg)
+{
+    if (can_msg->id == 404) {
+        left_marker = can_msg->data[0];
+        right_marker = can_msg->data[1];
+        //std::cout << "left: " << (int)left_marker << ", right: " << (int)right_marker << std::endl;
     }
 
 }
@@ -136,7 +169,7 @@ void SemiAuto::automaticRailService(){
    // railDetected = railDetection();
     //Velocities
     double vx;
-    vx = 0.25;
+    vx = 0.5;
     geometry_msgs::Twist base_cmd;
 
     // No rail detected
@@ -146,8 +179,14 @@ void SemiAuto::automaticRailService(){
         vel_pub_.publish(base_cmd);
     }
 
-    // Rail detected
-    if(railDetected && forwardMotion) {
+    // Rail and tape detected
+    if(railDetected && forwardMotion && tapeDetected) {
+        //Publish
+        base_cmd.linear.x = 0.3*vx;
+        vel_pub_.publish(base_cmd);
+        entering = true;
+    // Rail has successfully been entered
+    }else if(entering && railDetected && forwardMotion && !tapeDetected){
         //Publish
         base_cmd.linear.x = vx;
         vel_pub_.publish(base_cmd);
@@ -168,8 +207,9 @@ void SemiAuto::automaticRailService(){
         base_cmd.linear.x = vx;
         vel_pub_.publish(base_cmd);
 
-        // bool
+        //Returning
         forwardMotion = false;
+        entering = false;
     }
 
     // Returning
@@ -214,14 +254,14 @@ bool SemiAuto::plant_monitoring(std_srvs::Trigger::Request  &req,
 
     ROS_INFO("Service code entered");
 
-    if(railDetected){
+    if(railDetected && tapeDetected){
         // Service response
         res.success = true;
-        res.message = "Rail Detected, start service";
+        res.message = "Rail and tape Detected, start service";
         plantServiceRequested = true;
     }else{
         res.success = false;
-        res.message = "Rail not detected, abort service";
+        res.message = "Rail and tape not detected, abort service";
     }
 
 
@@ -244,6 +284,7 @@ SemiAuto::SemiAuto(ros::NodeHandle &nh_)
 
     /** Topics **/
     ultrasonic_sub_ = nh_.subscribe("serial_io", 1, &SemiAuto::rangeDetection, this);
+    can_sub_ = nh_.subscribe("can_frames_device_r", 1, &SemiAuto::canCallback, this);
     vel_pub_ = nh_.advertise<geometry_msgs::Twist>("nav_vel",1);
 
 
@@ -253,6 +294,8 @@ SemiAuto::SemiAuto(ros::NodeHandle &nh_)
     forwardMotion = true;
     wallDetected = false;
     floorDetected = true;
+    tapeDetected = false;
+    entering = false;
 
 }
 

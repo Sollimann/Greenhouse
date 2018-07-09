@@ -1,5 +1,5 @@
 #include <NewPing.h>
-
+  
 #define TRIGGER_PIN1  10
 #define ECHO_PIN1     10
 #define TRIGGER_PIN2  11

@@ -21,6 +21,7 @@ public:
     bool railDetection();
     bool wallDetection();
     bool floorDetection();
+    bool tapeDetection();
     void automaticRailService();
 
 private:
@@ -41,22 +42,30 @@ private:
     /** Subscriber **/
 
     ros::Subscriber ultrasonic_sub_;
+    ros::Subscriber can_sub_;
 
     /** Publisher **/
 
     ros::Publisher vel_pub_;
-
 
     /** Callbacks **/
 
     //Check if connected to rail
     void rangeDetection(const thorvald_msgs::ThorvaldIOConstPtr& serial_msg);
 
+    //can messages callback
+    void canCallback(const thorvald_base::CANFrameConstPtr& can_msg);
+
     /** Variables **/
-    bool railDetected, wallDetected, floorDetected;
-    bool forwardMotion, plantServiceRequested;
+    bool railDetected, wallDetected, floorDetected, tapeDetected;
+    bool forwardMotion, entering, plantServiceRequested;
     unsigned int totNrDevices, deviceID, range;
     unsigned int ranges[100];
+
+    //Magnetic tape marker
+    //Ascii
+    signed char left_marker;
+    signed char right_marker;
 };
 
 
