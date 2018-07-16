@@ -1,0 +1,51 @@
+
+
+# Base calculator is used for calculating joint commands from velocity commands goven in the base_link frame, and for calculating odometry from actual joint states
+#base_calculator: "pltf_clc_std::PltfClcStd"
+base_calculator: "pltf_clc_2wdiff::PltfClc2WDiff"
+
+
+# Motor drives
+# type 0: propulsion/steering (default module)
+# type 1: propulsion/propulsion (used for some diff. drive robots)
+motor_drives:
+  {
+    drive0: {node: 1,
+             x: 0, y: 0.329,
+             type: 1,
+             leg_mesh: 9,
+             r_wheel: 0.18, prp_gr_rt: 42, prp_enc_ppr: 1024, prp_max_rpm: 3000, prp_sim_a: 1.5,
+             str_gr_rt: 42.8571429, str_enc_ppr: 1024, str_lim: 3.078027759, str_sim_v: 4},
+  
+    drive1: {node: 1,
+             x:  0, y: -0.329,
+             type: 1,
+             leg_mesh: 8,
+             r_wheel: 0.18, prp_gr_rt: 42, prp_enc_ppr: 1024, prp_max_rpm: 3000, prp_sim_a: 1.5,
+             str_gr_rt: 42.8571429, str_enc_ppr: 1024, str_lim: 3.078027759, str_sim_v: 4},
+  }
+
+casters:
+  {
+    caster0: {x: -0.50, y: -0.50, z_top: 0.72,
+              r_wheel: 0.06, w_wheel: 0.05, offset: 0.03},
+    caster1: {x: -0.50, y: 0.50, z_top: 0.72,
+              r_wheel: 0.06, w_wheel: 0.05, offset: 0.03}
+  }
+
+
+# Battery enclosure modules. Set node to -1 if battery is not included in module.
+batteries:
+  {
+    bat0: {node:  345, type: 0, x:  0.0, y:  0.0, z: 1.0, yaw: 0, bat_mesh: 0} ,
+    #bat1: {node: -1, x:  0.0, y: -0.75, yaw: 0, left: False},
+  }
+
+# Beams connecting drive modules
+beams:
+  {
+    #beam0: {start: "drive0", end: "drive1"},
+#    beam1: {start: "drive1", end: "drive2"},
+#    beam2: {start: "drive3", end: "drive2"},
+#    beam3: {start: "drive0", end: "drive3"},
+  }

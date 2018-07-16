@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="sensor_frames">
+
+<link name="base_sensors"/>
+
+<link name="um7"/>
+<link name="hokuyo"/>
+<link name="camera_depth_optical_frame"/>	
+			      
+
+<joint name="base_link_base_sens" type="fixed">
+  <parent link="base_link"/>
+  <child link="base_sensors"/>
+  <origin xyz="0.0 0 0.562" rpy="0 0 0"/>
+</joint>
+
+<joint name="base_sens_xsens" type="fixed">
+  <parent link="base_sensors"/>
+  <child link="um7"/>
+  <origin xyz="0.10 0 -0.19" rpy="0 0 0"/>
+</joint>
+
+<joint name="base_sens_hokuyo" type="fixed">
+  <parent link="base_sensors"/>
+  <child link="hokuyo"/>
+  <origin xyz="0 0 0.044" rpy="0 0 0"/>
+</joint>
+
+<joint name="base_sens_cam" type="fixed">
+  <parent link="base_sensors"/>
+  <child link="camera_depth_optical_frame"/>
+  <origin xyz="0.15 0. -0.152" rpy="${-pi/2 -10./180.*pi} 0 ${-pi/2}"/>
+</joint>
+
+
+<!-- EXTRAS -->
+
+<link name="guren_ii_body">
+  <inertial>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <mass value="1"/>
+    <inertia
+      ixx="1.0" ixy="0.0" ixz="0.0"
+      iyy="1.0" iyz="0.0"
+      izz="1.0"/>
+  </inertial>
+  <visual>
+    <geometry>
+      <mesh filename="package://thorvald_model/meshes/guren_modules/guren_ii_body.stl"/>
+    </geometry>
+    <material name="whiter">
+      <color rgba="1 1 1 1"/>
+    </material>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="package://thorvald_model/meshes/guren_modules/guren_ii_body.stl"/>
+    </geometry>
+  </collision>
+</link>
+
+
+<joint name="base_body" type="fixed">
+  <parent link="base_link"/>
+  <child link="guren_ii_body"/>
+  <origin xyz="0.2 0.25 0.1" rpy="${pi/2} 0 ${-pi/2}"/>
+</joint>
+
+<link name="caster0">
+  <inertial>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <mass value="1"/>
+    <inertia
+      ixx="1.0" ixy="0.0" ixz="0.0"
+      iyy="1.0" iyz="0.0"
+      izz="1.0"/>
+  </inertial>
+  <visual>
+    <geometry>
+      <cylinder length="0.10" radius="0.10" />
+    </geometry>
+    <material name="black">
+      <color rgba="0 0 0 1"/>
+    </material>
+  </visual>
+  <collision>
+    <geometry>
+      <cylinder length="0.10" radius="0.10" />
+    </geometry>
+  </collision>
+</link>
+
+<joint name="base_caster0" type="fixed">
+  <parent link="base_link"/>
+  <child link="caster0"/>
+  <origin xyz="-0.48 -0.35 0.1" rpy="${pi/2} 0 0"/>
+</joint>
+
+<link name="caster1">
+  <inertial>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <mass value="1"/>
+    <inertia
+      ixx="1.0" ixy="0.0" ixz="0.0"
+      iyy="1.0" iyz="0.0"
+      izz="1.0"/>
+  </inertial>
+  <visual>
+    <geometry>
+      <cylinder length="0.10" radius="0.10" />
+    </geometry>
+    <material name="black">
+      <color rgba="0 0 0 1"/>
+    </material>
+  </visual>
+  <collision>
+    <geometry>
+      <cylinder length="0.10" radius="0.10" />
+    </geometry>
+  </collision>
+</link>
+<joint name="base_caster1" type="fixed">
+  <parent link="base_link"/>
+  <child link="caster1"/>
+  <origin xyz="-0.48 0.35 0.1" rpy="${pi/2} 0 0"/>
+</joint>
+</robot>
+

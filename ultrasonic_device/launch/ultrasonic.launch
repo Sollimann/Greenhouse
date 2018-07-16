@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 
 <launch>
-  <node pkg="ultrasonic_device" type="ultrasonic_receive_node" name="ultrasonic_receive_node" args="/dev/ttyUSB1 115200" output="screen">
+  <node pkg="ultrasonic_device" type="ultrasonic_receive_node" name="ultrasonic_receive_node" args="/dev/ttyUSB0 115200" output="screen">
   </node>
 </launch>

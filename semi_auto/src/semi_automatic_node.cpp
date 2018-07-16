@@ -1,5 +1,29 @@
 #include "semi_automatic_node.h"
 
+/****************************************************************
+ *
+ * Copyright (c) 2018
+ *
+ * Norwegian university of Life Sciences (NMBU)
+ * Robotics and Control
+ *
+ *
+ * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ *
+ * Project name: UV lights tomatoes
+ * ROS package name: semi_auto
+ * Description: This node ...
+ *
+ * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ *
+ * Author: Kristoffer Rakstad Solberg, email:kristrso@stud.ntnu.no
+ *
+ * Date of creation: Juli 2018
+ * ToDo: - Clean up
+ *
+ *
+ ****************************************************************/
+
 
 /****************************************************************************/
 /****************************** FLOOR DETECTION *****************************/
@@ -217,10 +241,9 @@ void SemiAuto::automaticRailService(){
         //Publish
         base_cmd.linear.x = -vx;
         vel_pub_.publish(base_cmd);
-    }
 
-    // When exiting the rails backwards
-    if(!forwardMotion && floorDetected){
+        // When exiting the rails backwards
+    }else if(!forwardMotion && floorDetected && tapeDetected){
 
         // Make forward motion true for next run
         forwardMotion = true;
@@ -258,15 +281,91 @@ bool SemiAuto::plant_monitoring(std_srvs::Trigger::Request  &req,
         // Service response
         res.success = true;
         res.message = "Rail and tape Detected, start service";
+        forwardMotion = true;
         plantServiceRequested = true;
     }else{
         res.success = false;
         res.message = "Rail and tape not detected, abort service";
     }
 
+    return true;
+}
+
+/****************************************************************************/
+/*************************** PLANT LIGHT SERVICE ****************************/
+/****************************************************************************/
+
+//On
+
+bool SemiAuto::plant_light_on(std_srvs::Trigger::Request  &req,
+                                std_srvs::Trigger::Response &res){
+
+    ROS_INFO("Service code entered");
+        // Service response
+        res.success = true;
+        res.message = "Lights available, start service";
+
+    turnOnLight();
 
     return true;
 }
+
+
+void SemiAuto::turnOnLight(){
+
+    std_srvs::SetBool lightSrv;
+    lightSrv.request.data = true;
+    lightSrv.response.success = true;
+    lightSrv.response.message = "Lights on";
+
+
+    ROS_INFO("calling service: light_service_on ");
+    if (light_on_client_.call(lightSrv))
+    {
+        ROS_INFO("finished calling");
+    }
+    else
+    {
+        ROS_INFO("calling service failed");
+    }
+
+}
+
+//Off
+
+bool SemiAuto::plant_light_off(std_srvs::Trigger::Request  &req,
+                              std_srvs::Trigger::Response &res){
+
+    ROS_INFO("Service code entered");
+    // Service response
+    res.success = true;
+    res.message = "Lights available, start service";
+
+    turnOffLight();
+
+    return true;
+}
+
+
+void SemiAuto::turnOffLight(){
+
+    std_srvs::SetBool lightSrv;
+    lightSrv.request.data = false;
+    lightSrv.response.success = true;
+    lightSrv.response.message = "Lights off";
+
+    ROS_INFO("calling service: light_service_off");
+    if (light_off_client_.call(lightSrv))
+    {
+        ROS_INFO("finished calling");
+    }
+    else
+    {
+        ROS_INFO("calling service failed");
+    }
+
+}
+
 
 /****************************************************************************/
 /********************************* CONSTRUCTOR ******************************/
@@ -282,6 +381,17 @@ SemiAuto::SemiAuto(ros::NodeHandle &nh_)
     plant_monitoring_service_ = nh_.advertiseService("plant_monitoring", &SemiAuto::plant_monitoring, this);
     ROS_INFO("Ready for plant monitoring. ");
 
+    plant_light_on_service_ = nh_.advertiseService("plant_light_on_service", &SemiAuto::plant_light_on, this);
+    ROS_INFO("Ready for plant light on. ");
+
+    plant_light_off_service_ = nh_.advertiseService("plant_light_off_service", &SemiAuto::plant_light_off, this);
+    ROS_INFO("Ready for plant light off. ");
+
+    /** Clients **/
+
+    light_on_client_ = nh_.serviceClient<std_srvs::SetBool>("switch_rl3"); //write to allready existing service
+    light_off_client_ = nh_.serviceClient<std_srvs::SetBool>("switch_rl3");
+
     /** Topics **/
     ultrasonic_sub_ = nh_.subscribe("serial_io", 1, &SemiAuto::rangeDetection, this);
     can_sub_ = nh_.subscribe("can_frames_device_r", 1, &SemiAuto::canCallback, this);
@@ -296,6 +406,8 @@ SemiAuto::SemiAuto(ros::NodeHandle &nh_)
     floorDetected = true;
     tapeDetected = false;
     entering = false;
+    lightIsOn = false;
+
 
 }
 

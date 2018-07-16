@@ -1,0 +1,53 @@
+<?xml version="1.0" ?>
+
+<launch>
+  <arg name="robot_name" default="" />
+  <arg name="tf_prefix" default="" />
+  <arg name="robot_model" default="$(find tomato_bringup)/config/thorvald_ii_guren_ii.yaml" />
+  <arg name="model_extras" default="$(find tomato_bringup)/urdf/guren_ii_extras.xacro" />
+  <arg name="simple_sim" default="False" />
+  <arg name="joy_dev" default="/dev/input/js0" />
+
+
+  <!-- model bringup -->
+  <include file="$(find thorvald_model)/launch/model.launch">
+    <arg name="robot_name" value="$(arg robot_name)" />
+    <arg name="tf_prefix" value="$(arg tf_prefix)" />
+    <arg name="robot_model" value="$(arg robot_model)" />
+    <arg name="model_extras" value="$(arg model_extras)" />
+  </include>
+
+
+  <!-- base bringup-->
+  <include file="$(find thorvald_base)/launch/base_bringup.launch">
+    <arg name="robot_model" value="$(arg robot_model)" />
+    <arg name="simple_sim" value="$(arg simple_sim)" />
+  </include>
+
+
+  <!-- teleop bringup -->
+  <include file="$(find thorvald_teleop)/launch/teleop_xbox.launch" >
+    <arg name="joy_dev" value="$(arg joy_dev)" />
+  </include>
+
+
+  <!-- twist mux bringup -->
+  <include file="$(find thorvald_twist_mux)/launch/twist_mux.launch" />
+
+
+  <!-- localization bringup -->
+  <include file="$(find thorvald_2dnav)/launch/localization_local.launch" >
+    <arg name="tf_prefix" value="$(arg tf_prefix)" />
+  </include>
+
+  <!-- range sensor bringup -->
+  <include file="$(find ultrasonic_device)/launch/ultrasonic.launch" />
+
+  <!-- UVlight bringup -->
+  <include file="$(find thorvald_base)/launch/UVlight_bringup.launch" />
+
+  <!-- plant monitoring bringup -->
+  <include file="$(find semi_auto)/launch/semi_auto_guren.launch" />
+
+
+</launch>

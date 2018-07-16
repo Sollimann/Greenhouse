@@ -3,11 +3,13 @@
 
 // Messages
 #include <thorvald_msgs/ThorvaldIO.h>
+#include <thorvald_base/EnclosureState.h>
 #include <geometry_msgs/Twist.h>
 
 // Services
 #include <thorvald_base/CANFrame.h>
 #include <std_srvs/Trigger.h>
+#include <std_srvs/SetBool.h>
 #include <semi_auto/PlantMonitoring.h>
 #include <semi_auto/AddTwoInts.h>
 
@@ -23,6 +25,10 @@ public:
     bool floorDetection();
     bool tapeDetection();
     void automaticRailService();
+    void turnOnLight();
+    void turnOffLight();
+
+    std_srvs::SetBool::Request lightSrv;
 
 private:
 
@@ -34,10 +40,22 @@ private:
     bool plant_monitoring(std_srvs::Trigger::Request  &req,
              std_srvs::Trigger::Response &res);
 
+    bool plant_light_on(std_srvs::Trigger::Request  &req,
+                          std_srvs::Trigger::Response &res);
+
+    bool plant_light_off(std_srvs::Trigger::Request  &req,
+                        std_srvs::Trigger::Response &res);
+
     // Service declaration
     ros::ServiceServer add_ints_service_;
     ros::ServiceServer plant_monitoring_service_;
 
+    ros::ServiceServer plant_light_on_service_; //xbox controller service
+    ros::ServiceServer plant_light_off_service_; //xbox controller service
+
+    // Client declaration
+    ros::ServiceClient light_on_client_;
+    ros::ServiceClient light_off_client_;
 
     /** Subscriber **/
 
@@ -58,7 +76,7 @@ private:
 
     /** Variables **/
     bool railDetected, wallDetected, floorDetected, tapeDetected;
-    bool forwardMotion, entering, plantServiceRequested;
+    bool forwardMotion, entering, plantServiceRequested, lightIsOn;
     unsigned int totNrDevices, deviceID, range;
     unsigned int ranges[100];
 
